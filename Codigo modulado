@@ -1,0 +1,199 @@
+1. Configuración y definición de variables ( configuracion.py):
+Este módulo es el que configura las constantes y la pantalla . Aquí definimos los valores que nunca cambian a lo largo del juego, como el tamaño de las celdas, el tamaño de la pantalla, los colores y otras configuraciones iniciales. De esta forma, si quieres cambiar el tamaño del mapa1. Configuración y definición de variables ( configuracion.py):
+Este módulo es el que configura las constantes y la pantalla . Aquí definimos los valores que nunca cambian a lo largo del juego, como el tamaño de las celdas, el tamaño de la pantalla, los colores y otras configuraciones iniciales. De esta forma, si quieres cambiar el tamaño del mapa1. Configuración y definición de variables ( configuracion.py):
+Este módulo es el que configura las constantes y la pantalla . Aquí definimos los valores que nunca cambian a lo largo del juego, como el tamaño de las celdas, el tamaño de la pantalla, los colores y otras configuraciones iniciales. De esta forma, si quieres cambiar el tamaño del mapa                                                                                                                                                                 # configuracion.py
+
+import pygame
+
+# Inicializar pygame
+pygame.init()
+
+# Definir constantes
+MAPA_ANCHO = 20
+MAPA_ALTO = 9
+ANCHO, ALTO = 1200, 800
+TAMANO_CELDA = min(ANCHO // MAPA_ANCHO, ALTO // MAPA_ALTO)
+
+pantalla = pygame.display.set_mode((MAPA_ANCHO * TAMANO_CELDA, MAPA_ALTO * TAMANO_CELDA))
+pygame.display.set_caption("Comecocos")
+
+# Definir colores
+NEGRO = (0, 0, 0)
+AZUL = (0, 0, 255)
+AMARILLO = (255, 255, 0)
+BLANCO = (255, 255, 255)
+ROJO = (255, 0, 0)
+       Lógica del Juego ( logica.py):
+Este módulo es donde definimos cómo se mueve Pac-Man y el fantasma . Aquí están las funciones que permiten que los personajes se muevan, como mover_pacman()(para mover al jugador) y mover_fantasma()(para mover al enemigo de forma aleatoria). También se gestiona la recolección de puntos.
+
+pitón
+
+Copiar
+# logica.py
+
+import random
+from configuracion import MAPA_ANCHO, MAPA_ALTO, NEGRO, AZUL, BLANCO
+
+# Variables del juego
+pac_x, pac_y = 1, 1
+fan_x, fan_y = 10, 5
+puntos = 0
+mapa = [[0] * MAPA_ANCHO for _ in range(MAPA_ALTO)]
+
+def mover_pacman(dx, dy):
+    # Mover a Pac-Man en la dirección indicada
+    global pac_x, pac_y, puntos
+    nuevo_x = pac_x + dx
+    nuevo_y = pac_y + dy
+    if 0 <= nuevo_x < MAPA_ANCHO and 0 <= nuevo_y < MAPA_ALTO and mapa[nuevo_y][nuevo_x] != 1:
+        pac_x, pac_y = nuevo_x, nuevo_y
+        if mapa[pac_y][pac_x] == 2:
+            puntos += 10
+            mapa[pac_y][pac_x] = 0
+
+def mover_fantasma():
+    # Mover al fantasma de forma aleatoria
+    global fan_x, fan_y
+    movimientos = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Abajo, Arriba, Derecha, Izquierda
+    random.shuffle(movimientos)  # Mezcla los movimientos para que sea más aleatorio
+
+    for dx, dy in movimientos:
+        nuevo_x = fan_x + dx
+        nuevo_y = fan_y + dy
+        if 0 <= nuevo_x < MAPA_ANCHO and 0 <= nuevo_y < MAPA_ALTO and mapa[nuevo_y][nuevo_x] != 1:
+            fan_x, fan_y = nuevo_x, nuevo_y
+            break  # Sale del bucle cuando encuentra un movimiento válido                                                                                             3. Interacción con el Usuario (Pantallas de Fin de Juego) ( interfaz.py):
+Este módulo gestiona la interacción con el jugador , como mostrar las pantallas de "Game Over" o "You Won" (Perdiste o Ganaste). También maneja los cuadros de diálogo para preguntar si el jugador quiere reiniciar el juego.
+
+pitón
+
+Copiar
+# interfaz.py
+
+import pygame
+import sys
+import tkinter as tk
+from tkinter import messagebox
+from configuracion import NEGRO, ROJO, ALTO, ANCHO
+from logica import reiniciar_juego
+
+def mostrar_game_over():
+    pantalla.fill(NEGRO)
+    font = pygame.font.Font(None, 74)
+    texto = font.render("GAME OVER", True, ROJO)
+    pantalla.blit(texto, (ANCHO // 2 - 100, ALTO // 2 - 50))
+    pygame.display.flip()
+    pygame.time.delay(2000)
+    preguntar_volver_a_jugar("Game Over. ¿Quieres jugar de nuevo?")
+
+def mostrar_you_won():
+    pantalla.fill(NEGRO)
+    font = pygame.font.Font(None, 74)
+    texto = font.render("YOU WON", True, ROJO)
+    pantalla.blit(texto, (ANCHO // 2 - 100, ALTO // 2 - 50))
+    pygame.display.flip()
+    pygame.time.delay(2000)
+    preguntar_volver_a_jugar("You won. ¿Quieres jugar de nuevo?")
+
+def preguntar_volver_a_jugar(mensaje):
+    root = tk.Tk()
+    root.withdraw()
+    respuesta = messagebox.askyesno("Fin del juego", mensaje)
+    if respuesta:
+        reiniciar_juego()
+    else:
+        pygame.quit()
+        sys.exit()                                                                                                                                                                                                                   4. Renderizado de la Pantalla (Dibujar el Mapa y Personajes) ( renderizado.py):
+Aquí definimos cómo se dibuja el mapa y los personajes en la pantalla. La función dibujar_mapa()dibuja las paredes y puntos, y dibujar_personajes()dibuja a Pac-Man y al fantasma en sus posiciones.
+
+pitón
+
+Copiar
+# renderizado.py
+
+import pygame
+from configuracion import TAMANO_CELDA, NEGRO, AZUL, BLANCO
+from logica import pac_x, pac_y, fan_x, fan_y, mapa, puntos
+from interfaz import mostrar_puntaje
+
+def dibujar_mapa():
+    pantalla.fill(NEGRO)
+    for y in range(len(mapa)):
+        for x in range(len(mapa[0])):
+            if mapa[y][x] == 1:
+                pygame.draw.rect(pantalla, AZUL, (x * TAMANO_CELDA, y * TAMANO_CELDA, TAMANO_CELDA, TAMANO_CELDA))
+            elif mapa[y][x] == 2:
+                pygame.draw.circle(pantalla, BLANCO, (x * TAMANO_CELDA + TAMANO_CELDA // 2, y * TAMANO_CELDA + TAMANO_CELDA // 2), TAMANO_CELDA // 4)
+
+def dibujar_personajes(pacman_img, fantasm_img):
+    pantalla.blit(pacman_img, (pac_x * TAMANO_CELDA, pac_y * TAMANO_CELDA))
+    pantalla.blit(fantasm_img, (fan_x * TAMANO_CELDA, fan_y * TAMANO_CELDA))
+    mostrar_puntaje()                                                                                                                                                                                                      5. Control del Juego (Reinicio) ( control.py):
+Este módulo tiene las funciones que reinician el juego o lo inhibidor cuando el jugador gana o pierde.
+
+pitón
+
+Copiar
+# control.py
+
+from logica import pac_x, pac_y, fan_x, fan_y, puntos, mapa
+
+def reiniciar_juego():
+    global pac_x, pac_y, fan_x, fan_y, puntos, mapa
+    pac_x, pac_y = 1, 1
+    fan_x, fan_y = 10, 5
+    puntos = 0
+    mapa = [[0] * MAPA_ANCHO for _ in range(MAPA_ALTO)]
+    mapa[5][5] = 2
+
+
+6. Bucle Principal del Juego ( main.py):
+Este es el archivo principal donde se ejecuta el juego. Es el que usa todos los módulos anteriores para funcionar. Se encarga de detectar las teclas que presionan el jugador, mover a Pac-Man, mover al fantasma, verificar si el jugador ganó o perdió, y finalmente dibujar todo en la pantalla.
+
+pitón
+
+Copiar
+# main.py
+
+import pygame
+from configuracion import pantalla, ANCHO, ALTO
+from renderizado import dibujar_mapa, dibujar_personajes
+from logica import mover_pacman, mover_fantasma
+from interfaz import mostrar_game_over, mostrar_you_won
+
+def main():
+    ejecutando = True
+    while ejecutando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                ejecutando = False
+
+        teclas = pygame.key.get_pressed()
+        if teclas[pygame.K_LEFT]:
+            mover_pacman(-1, 0)
+        if teclas[pygame.K_RIGHT]:
+            mover_pacman(1, 0)
+        if teclas[pygame.K_UP]:
+            mover_pacman(0, -1)
+        if teclas[pygame.K_DOWN]:
+            mover_pacman(0, 1)
+
+        mover_fantasma()
+
+        # Verificar si el jugador pierde
+        if (pac_x, pac_y) == (fan_x, fan_y):
+            mostrar_game_over()
+
+        # Verificar si el jugador gana
+        if not any(2 in fila for fila in mapa):
+            mostrar_you_won()
+
+        # Renderizar el mapa y personajes
+        dibujar_mapa()
+        dibujar_personajes(pacman_img, fantasm_img)
+
+        pygame.display.flip()
+        pygame.time.delay(100)
+
+if _name_ == "_main_":
+    main()
