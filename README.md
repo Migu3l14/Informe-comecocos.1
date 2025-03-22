@@ -1,3 +1,8 @@
+miguel quintero
+luisa gironza
+camila gomez
+
+
 # Informe-comecocos.1 codigo de depuracion
 import pygame
 pygame.init()
